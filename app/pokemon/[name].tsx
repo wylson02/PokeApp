@@ -21,6 +21,7 @@ function formatPokemonId(id: number) {
 }
 
 function formatPokemonName(name: string) {
+  if (!name) return '';
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -49,57 +50,73 @@ export default function PokemonDetailScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerState}>
-          <Text style={styles.errorText}>{error || 'Pokémon introuvable.'}</Text>
-          <Pressable style={styles.retryButton} onPress={reload}>
-            <Text style={styles.retryButtonText}>Réessayer</Text>
-          </Pressable>
+          <View style={styles.stateCard}>
+            <Text style={styles.stateEmoji}>⚠️</Text>
+            <Text style={styles.errorText}>{error || 'Pokémon introuvable.'}</Text>
+            <Pressable style={styles.retryButton} onPress={reload}>
+              <Text style={styles.retryButtonText}>Réessayer</Text>
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
   const favorite = isFavorite(pokemon.name);
+  const displayName = pokemon.frenchName ?? pokemon.name;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.headerCard}>
-          <Image
-            source={{ uri: pokemon.image }}
-            style={styles.image}
-            resizeMode="contain"
-          />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.heroCard}>
+          <View style={styles.imagePanel}>
+            <Image
+              source={{ uri: pokemon.image }}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </View>
 
-          <Text style={styles.id}>{formatPokemonId(pokemon.id)}</Text>
-          <Text style={styles.name}>{formatPokemonName(pokemon.name)}</Text>
+          <View style={styles.titleBlock}>
+            <Text style={styles.id}>{formatPokemonId(pokemon.id)}</Text>
+            <Text style={styles.name}>{formatPokemonName(displayName)}</Text>
+            <Text style={styles.subtitle}>Fiche détaillée du Pokémon</Text>
+          </View>
+
+          <View style={styles.favoriteWrapper}>
+            <FavoriteButton
+              isFavorite={favorite}
+              onPress={() => toggleFavorite(pokemon.name)}
+            />
+          </View>
 
           <View style={styles.typesContainer}>
             {pokemon.types.map((type) => (
               <TypeBadge key={type.name} type={type.name} />
             ))}
           </View>
-
-          <FavoriteButton
-            isFavorite={favorite}
-            onPress={() => toggleFavorite(pokemon.name)}
-          />
         </View>
 
-        <View style={styles.infoCard}>
+        <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Informations</Text>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Taille</Text>
-            <Text style={styles.infoValue}>{formatHeight(pokemon.height)}</Text>
-          </View>
+          <View style={styles.metricsRow}>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricLabel}>Taille</Text>
+              <Text style={styles.metricValue}>{formatHeight(pokemon.height)}</Text>
+            </View>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Poids</Text>
-            <Text style={styles.infoValue}>{formatWeight(pokemon.weight)}</Text>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricLabel}>Poids</Text>
+              <Text style={styles.metricValue}>{formatWeight(pokemon.weight)}</Text>
+            </View>
           </View>
         </View>
 
-        <View style={styles.statsCard}>
+        <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Stats principales</Text>
           <StatsList stats={pokemon.stats} />
         </View>
@@ -111,98 +128,119 @@ export default function PokemonDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F7F8FA',
+    backgroundColor: '#EEF4F0',
   },
   content: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 32,
   },
-  headerCard: {
+  heroCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
+    borderRadius: 28,
+    padding: 18,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#DCE8DF',
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
-  image: {
-    width: 180,
-    height: 180,
-    marginBottom: 12,
+  imagePanel: {
+    width: '100%',
+    height: 240,
+    backgroundColor: '#F6FAF7',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#D7E6DA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 18,
   },
-  id: {
-    fontSize: 14,
-    color: '#6B7280',
+  image: {
+    width: 190,
+    height: 190,
+  },
+  titleBlock: {
+    alignItems: 'center',
     marginBottom: 6,
   },
+  id: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 6,
+    fontWeight: '600',
+  },
   name: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginBottom: 6,
+    letterSpacing: 0.3,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#64748B',
+    textAlign: 'center',
+  },
+  favoriteWrapper: {
+    marginTop: 14,
     marginBottom: 14,
+    alignItems: 'center',
   },
   typesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'center',
   },
-  infoCard: {
+  sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 28,
     padding: 18,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#DCE8DF',
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    elevation: 3,
-  },
-  statsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontWeight: '800',
+    color: '#1E293B',
     marginBottom: 14,
   },
-  infoRow: {
+  metricsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#F7F8FA',
-    borderRadius: 12,
+    gap: 12,
+  },
+  metricBox: {
+    flex: 1,
+    backgroundColor: '#F6FAF7',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#D7E6DA',
+    paddingVertical: 18,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 10,
+    alignItems: 'center',
   },
-  infoLabel: {
-    fontSize: 15,
-    color: '#374151',
+  metricLabel: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 8,
+    fontWeight: '600',
   },
-  infoValue: {
-    fontSize: 15,
-    color: '#111827',
-    fontWeight: '700',
+  metricValue: {
+    fontSize: 18,
+    color: '#1E293B',
+    fontWeight: '800',
   },
   centerState: {
     flex: 1,
@@ -210,20 +248,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
   },
+  stateCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  stateEmoji: {
+    fontSize: 28,
+    marginBottom: 10,
+  },
   errorText: {
     fontSize: 16,
     color: '#B91C1C',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    lineHeight: 22,
   },
   retryButton: {
-    backgroundColor: '#EF5350',
-    paddingHorizontal: 18,
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 999,
   },
   retryButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
