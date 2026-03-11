@@ -77,7 +77,9 @@ export default function HomeScreen() {
 
   const [search, setSearch] = useState("");
   const [language, setLanguage] = useState<Language>("fr");
-  const [selectedGeneration, setSelectedGeneration] = useState<number | null>(null);
+  const [selectedGeneration, setSelectedGeneration] = useState<number | null>(
+    null,
+  );
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [generationMenuOpen, setGenerationMenuOpen] = useState(false);
@@ -91,7 +93,13 @@ export default function HomeScreen() {
   const filteredPokemon = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
-    const baseList = normalizedSearch ? allPokemon : pokemon;
+    const hasActiveFilters =
+      normalizedSearch.length > 0 ||
+      selectedGeneration !== null ||
+      selectedType !== null ||
+      favoritesOnly;
+
+    const baseList = hasActiveFilters ? allPokemon : pokemon;
 
     return baseList.filter((item) => {
       const frenchName = (item.frenchName ?? "").toLowerCase();
@@ -116,10 +124,7 @@ export default function HomeScreen() {
       const matchesFavorite = !favoritesOnly || isFavorite(item.name);
 
       return (
-        matchesSearch &&
-        matchesGeneration &&
-        matchesType &&
-        matchesFavorite
+        matchesSearch && matchesGeneration && matchesType && matchesFavorite
       );
     });
   }, [
@@ -190,7 +195,7 @@ export default function HomeScreen() {
 
   const renderItem = ({ item }: { item: PokemonListItem }) => {
     const displayName =
-      language === "fr" ? item.frenchName ?? item.name : item.name;
+      language === "fr" ? (item.frenchName ?? item.name) : item.name;
 
     return (
       <PokemonCard
@@ -352,7 +357,9 @@ export default function HomeScreen() {
                   <Text style={styles.filterButtonLabel}>
                     {language === "fr" ? "Génération" : "Generation"}
                   </Text>
-                  <Text style={styles.filterButtonValue}>{activeGenerationLabel}</Text>
+                  <Text style={styles.filterButtonValue}>
+                    {activeGenerationLabel}
+                  </Text>
                 </Pressable>
 
                 {generationMenuOpen ? (
@@ -383,7 +390,9 @@ export default function HomeScreen() {
                                 styles.dropdownItemTextActive,
                             ]}
                           >
-                            {language === "fr" ? option.labelFr : option.labelEn}
+                            {language === "fr"
+                              ? option.labelFr
+                              : option.labelEn}
                           </Text>
                         </Pressable>
                       ))}
@@ -401,7 +410,9 @@ export default function HomeScreen() {
                   }}
                 >
                   <Text style={styles.filterButtonLabel}>Type</Text>
-                  <Text style={styles.filterButtonValue}>{activeTypeLabel}</Text>
+                  <Text style={styles.filterButtonValue}>
+                    {activeTypeLabel}
+                  </Text>
                 </Pressable>
 
                 {typeMenuOpen ? (
@@ -432,7 +443,9 @@ export default function HomeScreen() {
                                 styles.dropdownItemTextActive,
                             ]}
                           >
-                            {language === "fr" ? option.labelFr : option.labelEn}
+                            {language === "fr"
+                              ? option.labelFr
+                              : option.labelEn}
                           </Text>
                         </Pressable>
                       ))}
