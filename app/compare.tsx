@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { router } from 'expo-router';
 import {
   Image,
   SafeAreaView,
@@ -298,7 +299,18 @@ export default function CompareScreen() {
         </View>
 
         <View style={styles.compareRow}>
-          <View style={styles.pokemonCard}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.pokemonCard,
+              pressed && styles.pokemonCardPressed,
+            ]}
+            onPress={() => {
+              if (leftPokemon) {
+                router.push(`/pokemon/${leftPokemon.name}`);
+              }
+            }}
+            disabled={!leftPokemon}
+          >
             {leftLoading ? (
               <Loader />
             ) : leftError || !leftPokemon ? (
@@ -323,11 +335,24 @@ export default function CompareScreen() {
                     <TypeBadge key={`left-${type.name}`} type={type.name} />
                   ))}
                 </View>
+
+                <Text style={styles.cardHint}>Voir la fiche</Text>
               </>
             )}
-          </View>
+          </Pressable>
 
-          <View style={styles.pokemonCard}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.pokemonCard,
+              pressed && styles.pokemonCardPressed,
+            ]}
+            onPress={() => {
+              if (rightPokemon) {
+                router.push(`/pokemon/${rightPokemon.name}`);
+              }
+            }}
+            disabled={!rightPokemon}
+          >
             {rightLoading ? (
               <Loader />
             ) : rightError || !rightPokemon ? (
@@ -352,9 +377,11 @@ export default function CompareScreen() {
                     <TypeBadge key={`right-${type.name}`} type={type.name} />
                   ))}
                 </View>
+
+                <Text style={styles.cardHint}>Voir la fiche</Text>
               </>
             )}
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.sectionCard}>
@@ -560,7 +587,7 @@ export default function CompareScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EEF4F0',
+    backgroundColor: '#3ea56041',
   },
   content: {
     paddingHorizontal: 16,
@@ -678,6 +705,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     alignItems: 'center',
   },
+  pokemonCardPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.985 }],
+  },
   imagePanel: {
     width: '100%',
     height: 170,
@@ -705,6 +736,12 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 10,
     textAlign: 'center',
+  },
+  cardHint: {
+    marginTop: 10,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2E7D32',
   },
   typesContainer: {
     flexDirection: 'row',

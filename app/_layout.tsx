@@ -15,6 +15,12 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="pokedex"
+          options={{
             title: 'Pokédex',
           }}
         />
@@ -28,6 +34,12 @@ export default function RootLayout() {
           name="favorites"
           options={{
             title: 'Favoris',
+          }}
+        />
+        <Stack.Screen
+          name="compare"
+          options={{
+            title: 'Comparateur',
           }}
         />
       </Stack>

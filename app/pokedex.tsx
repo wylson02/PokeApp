@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import {
   Animated,
   FlatList,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +12,7 @@ import {
   NativeSyntheticEvent,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import PokemonCard from "../components/PokemonCard";
 import Loader from "../components/Loader";
@@ -78,7 +78,7 @@ export default function HomeScreen() {
   const [search, setSearch] = useState("");
   const [language, setLanguage] = useState<Language>("fr");
   const [selectedGeneration, setSelectedGeneration] = useState<number | null>(
-    null,
+    null
   );
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -210,7 +210,7 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <Loader />
       </SafeAreaView>
     );
@@ -218,7 +218,7 @@ export default function HomeScreen() {
 
   if (error && pokemon.length === 0) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <View style={styles.centerState}>
           <View style={styles.stateCard}>
             <Text style={styles.stateEmoji}>⚠️</Text>
@@ -235,7 +235,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
         <Animated.View
           onLayout={(event) => {
@@ -274,7 +274,7 @@ export default function HomeScreen() {
                         language === "fr" && styles.languageButtonTextActive,
                       ]}
                     >
-                      VF
+                      FR
                     </Text>
                   </Pressable>
 
@@ -291,7 +291,7 @@ export default function HomeScreen() {
                         language === "en" && styles.languageButtonTextActive,
                       ]}
                     >
-                      VE
+                      EN
                     </Text>
                   </Pressable>
                 </View>
@@ -410,9 +410,7 @@ export default function HomeScreen() {
                   }}
                 >
                   <Text style={styles.filterButtonLabel}>Type</Text>
-                  <Text style={styles.filterButtonValue}>
-                    {activeTypeLabel}
-                  </Text>
+                  <Text style={styles.filterButtonValue}>{activeTypeLabel}</Text>
                 </Pressable>
 
                 {typeMenuOpen ? (
@@ -492,6 +490,7 @@ export default function HomeScreen() {
         </Animated.View>
 
         <Animated.FlatList
+          style={styles.list}
           data={filteredPokemon}
           keyExtractor={(item) => item.name}
           renderItem={renderItem}
@@ -499,7 +498,7 @@ export default function HomeScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={[
             styles.listContent,
-            { paddingTop: headerHeight + 16 },
+            { paddingTop: headerHeight + 12 },
           ]}
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}
@@ -550,12 +549,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#EEF4F0",
+    backgroundColor: "#3ea56041",
   },
   container: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 12,
+  },
+  list: {
+    flex: 1,
   },
   headerOverlay: {
     position: "absolute",
@@ -797,7 +799,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   listContent: {
-    paddingBottom: 28,
+    paddingBottom: 0,
+    flexGrow: 1,
   },
   row: {
     justifyContent: "space-between",
@@ -805,7 +808,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingTop: 16,
-    paddingBottom: 28,
+    paddingBottom: 0,
     alignItems: "center",
   },
   footerLoadingText: {

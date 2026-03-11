@@ -122,10 +122,10 @@ export default function IntroScreen() {
             />
           </Animated.View>
 
-          <Text style={styles.title}>Pokédex</Text>
+          <Text style={styles.title}> Bienvenue sur le Pokédex !</Text>
           <Text style={styles.subtitle}>
             Explore les Pokémon, filtre par génération, compare leurs stats et
-            construis ta collection.
+            construis ta propre équipe.
           </Text>
 
           <Animated.View
@@ -141,7 +141,7 @@ export default function IntroScreen() {
               onPress={handleStart}
               disabled={isStarting}
             >
-              <Text style={styles.startButtonText}>Commencer</Text>
+              <Text style={styles.startButtonText}>C'est parti !</Text>
             </Pressable>
           </Animated.View>
         </Animated.View>
@@ -158,7 +158,7 @@ export default function IntroScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EEF4F0',
+    backgroundColor: '#3ea56041',
   },
   container: {
     flex: 1,
@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 10,
     letterSpacing: 0.4,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,

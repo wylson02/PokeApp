@@ -95,7 +95,7 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EEF4F0',
+    backgroundColor: '#3ea56041',
   },
   container: {
     flex: 1,

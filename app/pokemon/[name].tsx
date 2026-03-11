@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   Image,
   Pressable,
@@ -7,21 +7,21 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from 'react-native';
 
-import FavoriteButton from "../../components/FavoriteButton";
-import Loader from "../../components/Loader";
-import StatsList from "../../components/StatsList";
-import TypeBadge from "../../components/TypeBadge";
-import { useFavorites } from "../../context/FavoritesContext";
-import { usePokemonDetail } from "../../hooks/usePokemonDetail";
+import FavoriteButton from '../../components/FavoriteButton';
+import Loader from '../../components/Loader';
+import StatsList from '../../components/StatsList';
+import TypeBadge from '../../components/TypeBadge';
+import { useFavorites } from '../../context/FavoritesContext';
+import { usePokemonDetail } from '../../hooks/usePokemonDetail';
 
 function formatPokemonId(id: number) {
-  return `#${id.toString().padStart(3, "0")}`;
+  return `#${id.toString().padStart(3, '0')}`;
 }
 
 function formatPokemonName(name: string) {
-  if (!name) return "";
+  if (!name) return '';
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -61,11 +61,11 @@ function formatEvolutionCondition(evolution: {
     return `Moment : ${evolution.timeOfDay}`;
   }
 
-  if (evolution.trigger === "trade") {
-    return "Échange";
+  if (evolution.trigger === 'trade') {
+    return 'Échange';
   }
 
-  return null;
+  return 'Évolution spéciale';
 }
 
 export default function PokemonDetailScreen() {
@@ -87,11 +87,16 @@ export default function PokemonDetailScreen() {
         <View style={styles.centerState}>
           <View style={styles.stateCard}>
             <Text style={styles.stateEmoji}>⚠️</Text>
-            <Text style={styles.errorText}>
-              {error || "Pokémon introuvable."}
-            </Text>
+            <Text style={styles.errorText}>{error || 'Pokémon introuvable.'}</Text>
             <Pressable style={styles.retryButton} onPress={reload}>
               <Text style={styles.retryButtonText}>Réessayer</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.backToPokedexButton}
+              onPress={() => router.replace('/pokedex')}
+            >
+              <Text style={styles.backToPokedexButtonText}>Retour au Pokédex</Text>
             </Pressable>
           </View>
         </View>
@@ -102,12 +107,25 @@ export default function PokemonDetailScreen() {
   const favorite = isFavorite(pokemon.name);
   const displayName = pokemon.frenchName ?? pokemon.name;
 
+  const baseEvolution = pokemon.evolutions?.[0];
+  const nextEvolutions = pokemon.evolutions?.slice(1) ?? [];
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <Pressable
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && styles.backButtonPressed,
+          ]}
+          onPress={() => router.replace('/pokedex')}
+        >
+          <Text style={styles.backButtonText}>← Retour au Pokédex</Text>
+        </Pressable>
+
         <View style={styles.heroCard}>
           <View style={styles.imagePanel}>
             <Image
@@ -143,16 +161,12 @@ export default function PokemonDetailScreen() {
           <View style={styles.metricsRow}>
             <View style={styles.metricBox}>
               <Text style={styles.metricLabel}>Taille</Text>
-              <Text style={styles.metricValue}>
-                {formatHeight(pokemon.height)}
-              </Text>
+              <Text style={styles.metricValue}>{formatHeight(pokemon.height)}</Text>
             </View>
 
             <View style={styles.metricBox}>
               <Text style={styles.metricLabel}>Poids</Text>
-              <Text style={styles.metricValue}>
-                {formatWeight(pokemon.weight)}
-              </Text>
+              <Text style={styles.metricValue}>{formatWeight(pokemon.weight)}</Text>
             </View>
           </View>
         </View>
@@ -161,23 +175,48 @@ export default function PokemonDetailScreen() {
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Évolutions</Text>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.evolutionScrollContent}
-            >
-              {pokemon.evolutions.map((evolution, index) => {
-                const nextEvolution = pokemon.evolutions?.[index + 1];
-                const condition = nextEvolution
-                  ? formatEvolutionCondition(nextEvolution)
-                  : null;
+            {baseEvolution ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.baseEvolutionCard,
+                  pressed && styles.evolutionCardPressed,
+                ]}
+                onPress={() => router.push(`/pokemon/${baseEvolution.name}`)}
+              >
+                <View style={styles.baseEvolutionImagePanel}>
+                  <Image
+                    source={{ uri: baseEvolution.image }}
+                    style={styles.baseEvolutionImage}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.baseEvolutionLabel}>Base</Text>
+                <Text style={styles.baseEvolutionName}>
+                  {formatPokemonName(baseEvolution.frenchName ?? baseEvolution.name)}
+                </Text>
+              </Pressable>
+            ) : null}
 
-                return (
-                  <View
-                    key={`${evolution.name}-${index}`}
-                    style={styles.evolutionFlow}
-                  >
-                    <View style={styles.evolutionCard}>
+            {nextEvolutions.length > 0 ? (
+              <View style={styles.evolutionGrid}>
+                {nextEvolutions.map((evolution, index) => {
+                  const condition = formatEvolutionCondition(evolution);
+
+                  return (
+                    <Pressable
+                      key={`${evolution.name}-${index}`}
+                      style={({ pressed }) => [
+                        styles.evolutionBranchCard,
+                        pressed && styles.evolutionCardPressed,
+                      ]}
+                      onPress={() => router.push(`/pokemon/${evolution.name}`)}
+                    >
+                      <Text style={styles.branchArrow}>↓</Text>
+
+                      <View style={styles.conditionBadge}>
+                        <Text style={styles.conditionBadgeText}>{condition}</Text>
+                      </View>
+
                       <View style={styles.evolutionImagePanel}>
                         <Image
                           source={{ uri: evolution.image }}
@@ -187,26 +226,13 @@ export default function PokemonDetailScreen() {
                       </View>
 
                       <Text style={styles.evolutionName}>
-                        {formatPokemonName(
-                          evolution.frenchName ?? evolution.name,
-                        )}
+                        {formatPokemonName(evolution.frenchName ?? evolution.name)}
                       </Text>
-                    </View>
-
-                    {index < pokemon.evolutions!.length - 1 ? (
-                      <View style={styles.evolutionArrowBlock}>
-                        <Text style={styles.evolutionArrow}>→</Text>
-                        {condition ? (
-                          <Text style={styles.evolutionCondition}>
-                            {condition}
-                          </Text>
-                        ) : null}
-                      </View>
-                    ) : null}
-                  </View>
-                );
-              })}
-            </ScrollView>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -222,35 +248,59 @@ export default function PokemonDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#EEF4F0",
+    backgroundColor: '#EEF4F0',
   },
   content: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 32,
   },
+  backButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#DCE8DF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  backButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  backButtonText: {
+    color: '#1E293B',
+    fontSize: 14,
+    fontWeight: '700',
+  },
   heroCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 28,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#DCE8DF",
-    shadowColor: "#000",
+    borderColor: '#DCE8DF',
+    shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
   imagePanel: {
-    width: "100%",
+    width: '100%',
     height: 240,
-    backgroundColor: "#F6FAF7",
+    backgroundColor: '#F6FAF7',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#D7E6DA",
-    justifyContent: "center",
-    alignItems: "center",
+    borderColor: '#D7E6DA',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 18,
   },
   image: {
@@ -258,48 +308,48 @@ const styles = StyleSheet.create({
     height: 190,
   },
   titleBlock: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 6,
   },
   id: {
     fontSize: 13,
-    color: "#64748B",
+    color: '#64748B',
     marginBottom: 6,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   name: {
     fontSize: 30,
-    fontWeight: "800",
-    color: "#1E293B",
+    fontWeight: '800',
+    color: '#1E293B',
     marginBottom: 6,
     letterSpacing: 0.3,
-    textAlign: "center",
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#64748B",
-    textAlign: "center",
+    color: '#64748B',
+    textAlign: 'center',
   },
   favoriteWrapper: {
     marginTop: 14,
     marginBottom: 14,
-    alignItems: "center",
+    alignItems: 'center',
   },
   typesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   sectionCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 28,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#DCE8DF",
-    shadowColor: "#000",
+    borderColor: '#DCE8DF',
+    shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -307,55 +357,115 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "800",
-    color: "#1E293B",
+    fontWeight: '800',
+    color: '#1E293B',
     marginBottom: 14,
   },
   metricsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   metricBox: {
     flex: 1,
-    backgroundColor: "#F6FAF7",
+    backgroundColor: '#F6FAF7',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#D7E6DA",
+    borderColor: '#D7E6DA',
     paddingVertical: 18,
     paddingHorizontal: 14,
-    alignItems: "center",
+    alignItems: 'center',
   },
   metricLabel: {
     fontSize: 13,
-    color: "#64748B",
+    color: '#64748B',
     marginBottom: 8,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   metricValue: {
     fontSize: 18,
-    color: "#1E293B",
-    fontWeight: "800",
+    color: '#1E293B',
+    fontWeight: '800',
   },
-  evolutionScrollContent: {
-    paddingRight: 12,
+  baseEvolutionCard: {
+    backgroundColor: '#F6FAF7',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#D7E6DA',
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  evolutionFlow: {
-    flexDirection: "row",
-    alignItems: "center",
+  baseEvolutionImagePanel: {
+    width: 130,
+    height: 130,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  evolutionCard: {
-    width: 140,
-    alignItems: "center",
+  baseEvolutionImage: {
+    width: 95,
+    height: 95,
+  },
+  baseEvolutionLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  baseEvolutionName: {
+    fontSize: 16,
+    color: '#1E293B',
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  evolutionGrid: {
+    gap: 12,
+  },
+  evolutionBranchCard: {
+    backgroundColor: '#F6FAF7',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#D7E6DA',
+    padding: 16,
+    alignItems: 'center',
+  },
+  evolutionCardPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.985 }],
+  },
+  branchArrow: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#4CAF50',
+    marginBottom: 8,
+  },
+  conditionBadge: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  conditionBadgeText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#2E7D32',
+    fontWeight: '800',
+    textAlign: 'center',
   },
   evolutionImagePanel: {
     width: 120,
     height: 120,
-    backgroundColor: "#F6FAF7",
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#D7E6DA",
-    justifyContent: "center",
-    alignItems: "center",
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 10,
   },
   evolutionImage: {
@@ -364,43 +474,24 @@ const styles = StyleSheet.create({
   },
   evolutionName: {
     fontSize: 14,
-    fontWeight: "800",
-    color: "#1E293B",
-    textAlign: "center",
-  },
-  evolutionArrowBlock: {
-    width: 92,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-  },
-  evolutionArrow: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#4CAF50",
-    marginBottom: 6,
-  },
-  evolutionCondition: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#64748B",
-    textAlign: "center",
-    fontWeight: "700",
+    fontWeight: '800',
+    color: '#1E293B',
+    textAlign: 'center',
   },
   centerState: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 24,
   },
   stateCard: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
+    width: '100%',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 24,
-    alignItems: "center",
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: '#E5E7EB',
   },
   stateEmoji: {
     fontSize: 28,
@@ -408,20 +499,32 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: "#B91C1C",
-    textAlign: "center",
+    color: '#B91C1C',
+    textAlign: 'center',
     marginBottom: 16,
     lineHeight: 22,
   },
   retryButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 999,
+    marginBottom: 12,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  backToPokedexButton: {
+    backgroundColor: '#1E293B',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 999,
   },
-  retryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
+  backToPokedexButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
     fontSize: 14,
   },
 });
