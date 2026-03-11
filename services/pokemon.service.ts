@@ -9,6 +9,10 @@ type PokemonListResponse = {
 };
 
 type PokemonSpeciesResponse = {
+  generation?: {
+    name: string;
+    url: string;
+  };
   names?: {
     name: string;
     language: {
@@ -16,6 +20,43 @@ type PokemonSpeciesResponse = {
     };
   }[];
 };
+
+type PokemonResponse = {
+  id: number;
+  name: string;
+  height: number;
+  weight: number;
+  sprites: {
+    other?: {
+      'official-artwork'?: {
+        front_default: string | null;
+      };
+    };
+  };
+  types: {
+    type: {
+      name: string;
+    };
+  }[];
+  stats: {
+    base_stat: number;
+    stat: {
+      name: string;
+    };
+  }[];
+};
+
+function extractIdFromUrl(url: string) {
+  const parts = url.split('/').filter(Boolean);
+  return Number(parts[parts.length - 1]);
+}
+
+function getOfficialArtwork(id: number, pokemonData?: PokemonResponse) {
+  return (
+    pokemonData?.sprites?.other?.['official-artwork']?.front_default ??
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
+  );
+}
 
 export async function fetchPokemonList(
   limit: number,
@@ -31,11 +72,14 @@ export async function fetchPokemonList(
       const id = Number(parts[parts.length - 2]);
 
       let frenchName = pokemon.name;
+      let generationId: number | undefined = undefined;
+      let types: string[] = [];
 
       try {
-        const speciesData = await apiFetch<PokemonSpeciesResponse>(
-          `/pokemon-species/${id}`
-        );
+        const [speciesData, pokemonData] = await Promise.all([
+          apiFetch<PokemonSpeciesResponse>(`/pokemon-species/${id}`),
+          apiFetch<PokemonResponse>(`/pokemon/${id}`),
+        ]);
 
         const frenchEntry = speciesData.names?.find(
           (entry) => entry.language.name === 'fr'
@@ -44,16 +88,31 @@ export async function fetchPokemonList(
         if (frenchEntry?.name) {
           frenchName = frenchEntry.name;
         }
-      } catch {
-        frenchName = pokemon.name;
-      }
 
-      return {
-        id,
-        name: pokemon.name,
-        frenchName,
-        image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
-      };
+        if (speciesData.generation?.url) {
+          generationId = extractIdFromUrl(speciesData.generation.url);
+        }
+
+        types = pokemonData.types.map((t) => t.type.name);
+
+        return {
+          id,
+          name: pokemon.name,
+          frenchName,
+          generationId,
+          types,
+          image: getOfficialArtwork(id, pokemonData),
+        };
+      } catch {
+        return {
+          id,
+          name: pokemon.name,
+          frenchName: pokemon.name,
+          generationId: undefined,
+          types: [],
+          image: getOfficialArtwork(id),
+        };
+      }
     })
   );
 
@@ -63,9 +122,10 @@ export async function fetchPokemonList(
 export async function fetchPokemonDetail(
   name: string
 ): Promise<PokemonDetail> {
-  const data = await apiFetch<any>(`/pokemon/${name}`);
+  const data = await apiFetch<PokemonResponse>(`/pokemon/${name}`);
 
   let frenchName = data.name;
+  let generationId: number | undefined = undefined;
 
   try {
     const speciesData = await apiFetch<PokemonSpeciesResponse>(
@@ -79,21 +139,27 @@ export async function fetchPokemonDetail(
     if (frenchEntry?.name) {
       frenchName = frenchEntry.name;
     }
+
+    if (speciesData.generation?.url) {
+      generationId = extractIdFromUrl(speciesData.generation.url);
+    }
   } catch {
     frenchName = data.name;
+    generationId = undefined;
   }
 
   return {
     id: data.id,
     name: data.name,
     frenchName,
-    image: data.sprites.other['official-artwork'].front_default,
+    generationId,
+    image: getOfficialArtwork(data.id, data),
     height: data.height,
     weight: data.weight,
-    types: data.types.map((t: any) => ({
+    types: data.types.map((t) => ({
       name: t.type.name,
     })),
-    stats: data.stats.map((s: any) => ({
+    stats: data.stats.map((s) => ({
       name: s.stat.name,
       value: s.base_stat,
     })),

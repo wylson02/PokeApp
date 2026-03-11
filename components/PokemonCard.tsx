@@ -15,8 +15,41 @@ function formatPokemonName(name: string) {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
+function formatTypeName(type?: string) {
+  if (!type) return '';
+  return type.charAt(0).toUpperCase() + type.slice(1);
+}
+
+function getTypeLabel(type?: string) {
+  if (!type) return '';
+
+  const typeMap: Record<string, string> = {
+    normal: 'Normal',
+    fire: 'Feu',
+    water: 'Eau',
+    electric: 'Électrik',
+    grass: 'Plante',
+    ice: 'Glace',
+    fighting: 'Combat',
+    poison: 'Poison',
+    ground: 'Sol',
+    flying: 'Vol',
+    psychic: 'Psy',
+    bug: 'Insecte',
+    rock: 'Roche',
+    ghost: 'Spectre',
+    dragon: 'Dragon',
+    dark: 'Ténèbres',
+    steel: 'Acier',
+    fairy: 'Fée',
+  };
+
+  return typeMap[type] ?? formatTypeName(type);
+}
+
 export default function PokemonCard({ pokemon, onPress }: PokemonCardProps) {
   const displayName = pokemon.displayName ?? pokemon.frenchName ?? pokemon.name;
+  const primaryType = pokemon.types?.[0];
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -29,7 +62,15 @@ export default function PokemonCard({ pokemon, onPress }: PokemonCardProps) {
       </View>
 
       <Text style={styles.id}>{formatPokemonId(pokemon.id)}</Text>
-      <Text style={styles.name}>{formatPokemonName(displayName)}</Text>
+      <Text style={styles.name} numberOfLines={2}>
+        {formatPokemonName(displayName)}
+      </Text>
+
+      {primaryType ? (
+        <View style={styles.typeBadge}>
+          <Text style={styles.typeText}>{getTypeLabel(primaryType)}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -38,12 +79,14 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 22,
     padding: 12,
     margin: 6,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DCE8DF',
     shadowColor: '#000',
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: {
       width: 0,
@@ -53,26 +96,42 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: 110,
+    height: 118,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
-    backgroundColor: '#F7F8FA',
-    borderRadius: 12,
+    marginBottom: 10,
+    backgroundColor: '#F6FAF7',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#D7E6DA',
   },
   image: {
-    width: 90,
-    height: 90,
+    width: 92,
+    height: 92,
   },
   id: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748B',
     marginBottom: 4,
+    fontWeight: '600',
   },
   name: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontWeight: '800',
+    color: '#1E293B',
     textAlign: 'center',
+    minHeight: 42,
+    marginBottom: 8,
+  },
+  typeBadge: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  typeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2E7D32',
   },
 });

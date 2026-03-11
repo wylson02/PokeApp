@@ -19,17 +19,20 @@ export function usePokemonList() {
       setError(null);
 
       const data = await fetchPokemonList(TOTAL_POKEMON_LIMIT, 0);
+
       setAllPokemon(data);
       setVisibleCount(INITIAL_VISIBLE_COUNT);
     } catch {
       setError("Impossible de charger les Pokémon.");
+      setAllPokemon([]);
+      setVisibleCount(INITIAL_VISIBLE_COUNT);
     } finally {
       setLoading(false);
     }
   }, []);
 
   const loadMorePokemon = useCallback(async () => {
-    if (loading || loadingMore) {
+    if (loading || loadingMore || allPokemon.length === 0) {
       return;
     }
 
@@ -39,7 +42,10 @@ export function usePokemonList() {
 
     try {
       setLoadingMore(true);
-      setVisibleCount((prev) => prev + LOAD_MORE_STEP);
+
+      setVisibleCount((prev) =>
+        Math.min(prev + LOAD_MORE_STEP, allPokemon.length)
+      );
     } finally {
       setLoadingMore(false);
     }

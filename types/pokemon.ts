@@ -4,6 +4,9 @@ export type PokemonListItem = {
   frenchName?: string;
   displayName?: string;
   image: string;
+
+  generationId?: number;
+  types?: string[];
 };
 
 export type PokemonType = {
@@ -20,11 +23,16 @@ export type PokemonDetail = {
   name: string;
   frenchName?: string;
   image: string;
+
+  generationId?: number;
+
   height: number;
   weight: number;
+
   types: {
     name: string;
   }[];
+
   stats: {
     name: string;
     value: number;

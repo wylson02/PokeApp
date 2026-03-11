@@ -25,29 +25,60 @@ const typeColors: Record<string, string> = {
   fairy: '#D685AD',
 };
 
-function formatTypeName(type: string) {
-  return type.charAt(0).toUpperCase() + type.slice(1);
+const typeLabelsFr: Record<string, string> = {
+  normal: 'Normal',
+  fire: 'Feu',
+  water: 'Eau',
+  electric: 'Électrik',
+  grass: 'Plante',
+  ice: 'Glace',
+  fighting: 'Combat',
+  poison: 'Poison',
+  ground: 'Sol',
+  flying: 'Vol',
+  psychic: 'Psy',
+  bug: 'Insecte',
+  rock: 'Roche',
+  ghost: 'Spectre',
+  dragon: 'Dragon',
+  dark: 'Ténèbres',
+  steel: 'Acier',
+  fairy: 'Fée',
+};
+
+function getTypeLabel(type: string) {
+  return typeLabelsFr[type] ?? type.charAt(0).toUpperCase() + type.slice(1);
 }
 
 export default function TypeBadge({ type }: TypeBadgeProps) {
+  const color = typeColors[type] || '#9CA3AF';
+
   return (
-    <View style={[styles.badge, { backgroundColor: typeColors[type] || '#9CA3AF' }]}>
-      <Text style={styles.text}>{formatTypeName(type)}</Text>
+    <View style={[styles.badge, { backgroundColor: color }]}>
+      <Text style={styles.text}>{getTypeLabel(type)}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 999,
     marginRight: 8,
     marginBottom: 8,
+    minWidth: 70,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   text: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 });

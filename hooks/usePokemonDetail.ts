@@ -9,6 +9,7 @@ export function usePokemonDetail(name?: string) {
 
   const loadPokemon = useCallback(async () => {
     if (!name) {
+      setPokemon(null);
       setError('Pokémon introuvable.');
       setLoading(false);
       return;
@@ -17,11 +18,13 @@ export function usePokemonDetail(name?: string) {
     try {
       setLoading(true);
       setError(null);
+      setPokemon(null);
 
       const data = await fetchPokemonDetail(name);
       setPokemon(data);
-    } catch (err) {
+    } catch {
       setError('Impossible de charger ce Pokémon.');
+      setPokemon(null);
     } finally {
       setLoading(false);
     }

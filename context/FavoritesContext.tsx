@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from 'react';
 import {
   getStoredFavorites,
@@ -26,6 +27,10 @@ type FavoritesProviderProps = {
   children: ReactNode;
 };
 
+function normalizePokemonName(name: string) {
+  return name.trim().toLowerCase();
+}
+
 export function FavoritesProvider({ children }: FavoritesProviderProps) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(true);
@@ -34,7 +39,8 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
     async function loadFavorites() {
       try {
         const storedFavorites = await getStoredFavorites();
-        setFavorites(storedFavorites);
+        const normalizedFavorites = storedFavorites.map(normalizePokemonName);
+        setFavorites(normalizedFavorites);
       } finally {
         setLoadingFavorites(false);
       }
@@ -43,20 +49,32 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
     loadFavorites();
   }, []);
 
-  const isFavorite = (name: string) => {
-    return favorites.includes(name);
-  };
+  const favoritesSet = useMemo(() => {
+    return new Set(favorites);
+  }, [favorites]);
 
-  const toggleFavorite = async (name: string) => {
-    const normalizedName = name.toLowerCase();
+  const isFavorite = useCallback(
+    (name: string) => {
+      return favoritesSet.has(normalizePokemonName(name));
+    },
+    [favoritesSet]
+  );
 
-    const updatedFavorites = favorites.includes(normalizedName)
-      ? favorites.filter((favoriteName) => favoriteName !== normalizedName)
-      : [...favorites, normalizedName];
+  const toggleFavorite = useCallback(async (name: string) => {
+    const normalizedName = normalizePokemonName(name);
 
-    setFavorites(updatedFavorites);
-    await saveStoredFavorites(updatedFavorites);
-  };
+    let nextFavorites: string[] = [];
+
+    setFavorites((prev) => {
+      nextFavorites = prev.includes(normalizedName)
+        ? prev.filter((favoriteName) => favoriteName !== normalizedName)
+        : [...prev, normalizedName];
+
+      return nextFavorites;
+    });
+
+    await saveStoredFavorites(nextFavorites);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -65,7 +83,7 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
       toggleFavorite,
       loadingFavorites,
     }),
-    [favorites, loadingFavorites]
+    [favorites, isFavorite, toggleFavorite, loadingFavorites]
   );
 
   return (
