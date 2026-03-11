@@ -46,6 +46,11 @@ type PokemonResponse = {
   }[];
 };
 
+const pokemonListCache = new Map<string, PokemonListItem[]>();
+const pokemonSpeciesCache = new Map<number, PokemonSpeciesResponse>();
+const pokemonDataCache = new Map<number, PokemonResponse>();
+const pokemonDetailCache = new Map<string, PokemonDetail>();
+
 function extractIdFromUrl(url: string) {
   const parts = url.split('/').filter(Boolean);
   return Number(parts[parts.length - 1]);
@@ -58,10 +63,39 @@ function getOfficialArtwork(id: number, pokemonData?: PokemonResponse) {
   );
 }
 
+async function getPokemonSpecies(id: number): Promise<PokemonSpeciesResponse> {
+  const cached = pokemonSpeciesCache.get(id);
+  if (cached) {
+    return cached;
+  }
+
+  const data = await apiFetch<PokemonSpeciesResponse>(`/pokemon-species/${id}`);
+  pokemonSpeciesCache.set(id, data);
+  return data;
+}
+
+async function getPokemonData(id: number): Promise<PokemonResponse> {
+  const cached = pokemonDataCache.get(id);
+  if (cached) {
+    return cached;
+  }
+
+  const data = await apiFetch<PokemonResponse>(`/pokemon/${id}`);
+  pokemonDataCache.set(id, data);
+  return data;
+}
+
 export async function fetchPokemonList(
   limit: number,
   offset: number
 ): Promise<PokemonListItem[]> {
+  const cacheKey = `${limit}-${offset}`;
+  const cachedList = pokemonListCache.get(cacheKey);
+
+  if (cachedList) {
+    return cachedList;
+  }
+
   const data = await apiFetch<PokemonListResponse>(
     `/pokemon?limit=${limit}&offset=${offset}`
   );
@@ -77,8 +111,8 @@ export async function fetchPokemonList(
 
       try {
         const [speciesData, pokemonData] = await Promise.all([
-          apiFetch<PokemonSpeciesResponse>(`/pokemon-species/${id}`),
-          apiFetch<PokemonResponse>(`/pokemon/${id}`),
+          getPokemonSpecies(id),
+          getPokemonData(id),
         ]);
 
         const frenchEntry = speciesData.names?.find(
@@ -116,21 +150,28 @@ export async function fetchPokemonList(
     })
   );
 
+  pokemonListCache.set(cacheKey, enrichedPokemon);
   return enrichedPokemon;
 }
 
 export async function fetchPokemonDetail(
   name: string
 ): Promise<PokemonDetail> {
-  const data = await apiFetch<PokemonResponse>(`/pokemon/${name}`);
+  const normalizedName = name.trim().toLowerCase();
+  const cachedDetail = pokemonDetailCache.get(normalizedName);
+
+  if (cachedDetail) {
+    return cachedDetail;
+  }
+
+  const data = await apiFetch<PokemonResponse>(`/pokemon/${normalizedName}`);
+  pokemonDataCache.set(data.id, data);
 
   let frenchName = data.name;
   let generationId: number | undefined = undefined;
 
   try {
-    const speciesData = await apiFetch<PokemonSpeciesResponse>(
-      `/pokemon-species/${data.id}`
-    );
+    const speciesData = await getPokemonSpecies(data.id);
 
     const frenchEntry = speciesData.names?.find(
       (entry) => entry.language.name === 'fr'
@@ -148,7 +189,7 @@ export async function fetchPokemonDetail(
     generationId = undefined;
   }
 
-  return {
+  const result: PokemonDetail = {
     id: data.id,
     name: data.name,
     frenchName,
@@ -164,4 +205,7 @@ export async function fetchPokemonDetail(
       value: s.base_stat,
     })),
   };
+
+  pokemonDetailCache.set(normalizedName, result);
+  return result;
 }

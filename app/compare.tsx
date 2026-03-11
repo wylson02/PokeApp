@@ -174,6 +174,19 @@ export default function CompareScreen() {
   const leftStats = leftPokemon?.stats ?? [];
   const rightStats = rightPokemon?.stats ?? [];
 
+  const leftDisplayName = leftPokemon
+    ? formatPokemonName(leftPokemon.frenchName ?? leftPokemon.name)
+    : 'Pokémon 1';
+
+  const rightDisplayName = rightPokemon
+    ? formatPokemonName(rightPokemon.frenchName ?? rightPokemon.name)
+    : 'Pokémon 2';
+
+  const leftHeightValue = leftPokemon?.height ?? 0;
+  const rightHeightValue = rightPokemon?.height ?? 0;
+  const leftWeightValue = leftPokemon?.weight ?? 0;
+  const rightWeightValue = rightPokemon?.weight ?? 0;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -198,9 +211,7 @@ export default function CompareScreen() {
                 }
               >
                 <Text style={styles.selectorButtonText}>
-                  {leftPokemon
-                    ? formatPokemonName(leftPokemon.frenchName ?? leftPokemon.name)
-                    : 'Sélectionner'}
+                  {leftPokemon ? leftDisplayName : 'Sélectionner'}
                 </Text>
               </Pressable>
 
@@ -247,11 +258,7 @@ export default function CompareScreen() {
                 }
               >
                 <Text style={styles.selectorButtonText}>
-                  {rightPokemon
-                    ? formatPokemonName(
-                        rightPokemon.frenchName ?? rightPokemon.name
-                      )
-                    : 'Sélectionner'}
+                  {rightPokemon ? rightDisplayName : 'Sélectionner'}
                 </Text>
               </Pressable>
 
@@ -309,9 +316,7 @@ export default function CompareScreen() {
                 </View>
 
                 <Text style={styles.id}>{formatPokemonId(leftPokemon.id)}</Text>
-                <Text style={styles.name}>
-                  {formatPokemonName(leftPokemon.frenchName ?? leftPokemon.name)}
-                </Text>
+                <Text style={styles.name}>{leftDisplayName}</Text>
 
                 <View style={styles.typesContainer}>
                   {leftPokemon.types.map((type) => (
@@ -340,11 +345,7 @@ export default function CompareScreen() {
                 </View>
 
                 <Text style={styles.id}>{formatPokemonId(rightPokemon.id)}</Text>
-                <Text style={styles.name}>
-                  {formatPokemonName(
-                    rightPokemon.frenchName ?? rightPokemon.name
-                  )}
-                </Text>
+                <Text style={styles.name}>{rightDisplayName}</Text>
 
                 <View style={styles.typesContainer}>
                   {rightPokemon.types.map((type) => (
@@ -359,35 +360,111 @@ export default function CompareScreen() {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Informations</Text>
 
-          <View style={styles.infoCompareRow}>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Taille</Text>
-              <Text style={styles.infoValue}>
-                {formatHeight(leftPokemon?.height)}
-              </Text>
+          <View style={styles.comparisonInfoCard}>
+            <Text style={styles.comparisonInfoTitle}>Taille</Text>
+
+            <View style={styles.compareStatRow}>
+              <View style={styles.compareStatHeader}>
+                <Text
+                  style={[
+                    styles.comparePokemonName,
+                    leftHeightValue > rightHeightValue &&
+                      styles.comparePokemonNameWinner,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {leftDisplayName}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.statValue,
+                    leftHeightValue > rightHeightValue &&
+                      styles.statValueWinner,
+                  ]}
+                >
+                  {formatHeight(leftPokemon?.height)}
+                </Text>
+              </View>
             </View>
 
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Taille</Text>
-              <Text style={styles.infoValue}>
-                {formatHeight(rightPokemon?.height)}
-              </Text>
+            <View style={styles.compareStatRowNoMargin}>
+              <View style={styles.compareStatHeader}>
+                <Text
+                  style={[
+                    styles.comparePokemonName,
+                    rightHeightValue > leftHeightValue &&
+                      styles.comparePokemonNameWinner,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {rightDisplayName}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.statValue,
+                    rightHeightValue > leftHeightValue &&
+                      styles.statValueWinner,
+                  ]}
+                >
+                  {formatHeight(rightPokemon?.height)}
+                </Text>
+              </View>
             </View>
           </View>
 
-          <View style={styles.infoCompareRow}>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Poids</Text>
-              <Text style={styles.infoValue}>
-                {formatWeight(leftPokemon?.weight)}
-              </Text>
+          <View style={styles.comparisonInfoCard}>
+            <Text style={styles.comparisonInfoTitle}>Poids</Text>
+
+            <View style={styles.compareStatRow}>
+              <View style={styles.compareStatHeader}>
+                <Text
+                  style={[
+                    styles.comparePokemonName,
+                    leftWeightValue > rightWeightValue &&
+                      styles.comparePokemonNameWinner,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {leftDisplayName}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.statValue,
+                    leftWeightValue > rightWeightValue &&
+                      styles.statValueWinner,
+                  ]}
+                >
+                  {formatWeight(leftPokemon?.weight)}
+                </Text>
+              </View>
             </View>
 
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Poids</Text>
-              <Text style={styles.infoValue}>
-                {formatWeight(rightPokemon?.weight)}
-              </Text>
+            <View style={styles.compareStatRowNoMargin}>
+              <View style={styles.compareStatHeader}>
+                <Text
+                  style={[
+                    styles.comparePokemonName,
+                    rightWeightValue > leftWeightValue &&
+                      styles.comparePokemonNameWinner,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {rightDisplayName}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.statValue,
+                    rightWeightValue > leftWeightValue &&
+                      styles.statValueWinner,
+                  ]}
+                >
+                  {formatWeight(rightPokemon?.weight)}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
@@ -399,24 +476,75 @@ export default function CompareScreen() {
             const leftValue = getStatValue(leftStats, statName);
             const rightValue = getStatValue(rightStats, statName);
 
+            const leftWins = leftValue > rightValue;
+            const rightWins = rightValue > leftValue;
+
             return (
               <View key={statName} style={styles.statCard}>
                 <Text style={styles.statTitle}>{formatStatLabel(statName)}</Text>
 
-                <View style={styles.statSide}>
-                  <Text style={styles.statValue}>{leftValue}</Text>
+                <View style={styles.compareStatRow}>
+                  <View style={styles.compareStatHeader}>
+                    <Text
+                      style={[
+                        styles.comparePokemonName,
+                        leftWins && styles.comparePokemonNameWinner,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {leftDisplayName}
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.statValue,
+                        leftWins && styles.statValueWinner,
+                      ]}
+                    >
+                      {leftValue}
+                    </Text>
+                  </View>
+
                   <View style={styles.track}>
                     <View
-                      style={[styles.fill, { width: getBarWidth(leftValue) }]}
+                      style={[
+                        styles.fill,
+                        leftWins && styles.fillWinner,
+                        { width: getBarWidth(leftValue) },
+                      ]}
                     />
                   </View>
                 </View>
 
-                <View style={styles.statSide}>
-                  <Text style={styles.statValue}>{rightValue}</Text>
+                <View style={styles.compareStatRowNoMargin}>
+                  <View style={styles.compareStatHeader}>
+                    <Text
+                      style={[
+                        styles.comparePokemonName,
+                        rightWins && styles.comparePokemonNameWinner,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {rightDisplayName}
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.statValue,
+                        rightWins && styles.statValueWinner,
+                      ]}
+                    >
+                      {rightValue}
+                    </Text>
+                  </View>
+
                   <View style={styles.track}>
                     <View
-                      style={[styles.fill, { width: getBarWidth(rightValue) }]}
+                      style={[
+                        styles.fill,
+                        rightWins && styles.fillWinner,
+                        { width: getBarWidth(rightValue) },
+                      ]}
                     />
                   </View>
                 </View>
@@ -602,31 +730,20 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 14,
   },
-  infoCompareRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  infoBox: {
-    flex: 1,
+  comparisonInfoCard: {
     backgroundColor: '#F6FAF7',
-    borderRadius: 20,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#D7E6DA',
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    alignItems: 'center',
   },
-  infoLabel: {
-    fontSize: 13,
-    color: '#64748B',
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  infoValue: {
-    fontSize: 18,
-    color: '#1E293B',
+  comparisonInfoTitle: {
+    fontSize: 14,
+    color: '#475569',
     fontWeight: '800',
+    marginBottom: 12,
   },
   statCard: {
     backgroundColor: '#F6FAF7',
@@ -641,16 +758,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#475569',
     fontWeight: '800',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  statSide: {
-    marginBottom: 10,
+  compareStatRow: {
+    marginBottom: 12,
+  },
+  compareStatRowNoMargin: {
+    marginBottom: 0,
+  },
+  compareStatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 6,
+  },
+  comparePokemonName: {
+    flex: 1,
+    fontSize: 13,
+    color: '#475569',
+    fontWeight: '700',
+  },
+  comparePokemonNameWinner: {
+    color: '#166534',
   },
   statValue: {
     fontSize: 14,
     color: '#1E293B',
     fontWeight: '800',
-    marginBottom: 6,
+    minWidth: 48,
+    textAlign: 'right',
+  },
+  statValueWinner: {
+    color: '#166534',
   },
   track: {
     width: '100%',
@@ -661,8 +801,11 @@ const styles = StyleSheet.create({
   },
   fill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#94A3B8',
     borderRadius: 999,
+  },
+  fillWinner: {
+    backgroundColor: '#4CAF50',
   },
   centerState: {
     flex: 1,
