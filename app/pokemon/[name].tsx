@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from "expo-router";
 import {
   Image,
   Pressable,
@@ -7,21 +7,21 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
 
-import FavoriteButton from '../../components/FavoriteButton';
-import Loader from '../../components/Loader';
-import StatsList from '../../components/StatsList';
-import TypeBadge from '../../components/TypeBadge';
-import { useFavorites } from '../../context/FavoritesContext';
-import { usePokemonDetail } from '../../hooks/usePokemonDetail';
+import FavoriteButton from "../../components/FavoriteButton";
+import Loader from "../../components/Loader";
+import StatsList from "../../components/StatsList";
+import TypeBadge from "../../components/TypeBadge";
+import { useFavorites } from "../../context/FavoritesContext";
+import { usePokemonDetail } from "../../hooks/usePokemonDetail";
 
 function formatPokemonId(id: number) {
-  return `#${id.toString().padStart(3, '0')}`;
+  return `#${id.toString().padStart(3, "0")}`;
 }
 
 function formatPokemonName(name: string) {
-  if (!name) return '';
+  if (!name) return "";
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -31,6 +31,41 @@ function formatHeight(height: number) {
 
 function formatWeight(weight: number) {
   return `${weight / 10} kg`;
+}
+
+function formatEvolutionCondition(evolution: {
+  trigger?: string;
+  minLevel?: number | null;
+  item?: string | null;
+  heldItem?: string | null;
+  minHappiness?: number | null;
+  timeOfDay?: string | null;
+}) {
+  if (evolution.item) {
+    return `Objet : ${evolution.item}`;
+  }
+
+  if (evolution.heldItem) {
+    return `Objet tenu : ${evolution.heldItem}`;
+  }
+
+  if (evolution.minLevel) {
+    return `Niveau ${evolution.minLevel}`;
+  }
+
+  if (evolution.minHappiness) {
+    return `Bonheur ${evolution.minHappiness}`;
+  }
+
+  if (evolution.timeOfDay) {
+    return `Moment : ${evolution.timeOfDay}`;
+  }
+
+  if (evolution.trigger === "trade") {
+    return "Échange";
+  }
+
+  return null;
 }
 
 export default function PokemonDetailScreen() {
@@ -52,7 +87,9 @@ export default function PokemonDetailScreen() {
         <View style={styles.centerState}>
           <View style={styles.stateCard}>
             <Text style={styles.stateEmoji}>⚠️</Text>
-            <Text style={styles.errorText}>{error || 'Pokémon introuvable.'}</Text>
+            <Text style={styles.errorText}>
+              {error || "Pokémon introuvable."}
+            </Text>
             <Pressable style={styles.retryButton} onPress={reload}>
               <Text style={styles.retryButtonText}>Réessayer</Text>
             </Pressable>
@@ -106,15 +143,72 @@ export default function PokemonDetailScreen() {
           <View style={styles.metricsRow}>
             <View style={styles.metricBox}>
               <Text style={styles.metricLabel}>Taille</Text>
-              <Text style={styles.metricValue}>{formatHeight(pokemon.height)}</Text>
+              <Text style={styles.metricValue}>
+                {formatHeight(pokemon.height)}
+              </Text>
             </View>
 
             <View style={styles.metricBox}>
               <Text style={styles.metricLabel}>Poids</Text>
-              <Text style={styles.metricValue}>{formatWeight(pokemon.weight)}</Text>
+              <Text style={styles.metricValue}>
+                {formatWeight(pokemon.weight)}
+              </Text>
             </View>
           </View>
         </View>
+
+        {pokemon.evolutions && pokemon.evolutions.length > 0 ? (
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Évolutions</Text>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.evolutionScrollContent}
+            >
+              {pokemon.evolutions.map((evolution, index) => {
+                const nextEvolution = pokemon.evolutions?.[index + 1];
+                const condition = nextEvolution
+                  ? formatEvolutionCondition(nextEvolution)
+                  : null;
+
+                return (
+                  <View
+                    key={`${evolution.name}-${index}`}
+                    style={styles.evolutionFlow}
+                  >
+                    <View style={styles.evolutionCard}>
+                      <View style={styles.evolutionImagePanel}>
+                        <Image
+                          source={{ uri: evolution.image }}
+                          style={styles.evolutionImage}
+                          resizeMode="contain"
+                        />
+                      </View>
+
+                      <Text style={styles.evolutionName}>
+                        {formatPokemonName(
+                          evolution.frenchName ?? evolution.name,
+                        )}
+                      </Text>
+                    </View>
+
+                    {index < pokemon.evolutions!.length - 1 ? (
+                      <View style={styles.evolutionArrowBlock}>
+                        <Text style={styles.evolutionArrow}>→</Text>
+                        {condition ? (
+                          <Text style={styles.evolutionCondition}>
+                            {condition}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ) : null}
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Stats principales</Text>
@@ -128,7 +222,7 @@ export default function PokemonDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EEF4F0',
+    backgroundColor: "#EEF4F0",
   },
   content: {
     paddingHorizontal: 16,
@@ -136,27 +230,27 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   heroCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 28,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#DCE8DF',
-    shadowColor: '#000',
+    borderColor: "#DCE8DF",
+    shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
   imagePanel: {
-    width: '100%',
+    width: "100%",
     height: 240,
-    backgroundColor: '#F6FAF7',
+    backgroundColor: "#F6FAF7",
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#D7E6DA',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#D7E6DA",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 18,
   },
   image: {
@@ -164,48 +258,48 @@ const styles = StyleSheet.create({
     height: 190,
   },
   titleBlock: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 6,
   },
   id: {
     fontSize: 13,
-    color: '#64748B',
+    color: "#64748B",
     marginBottom: 6,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   name: {
     fontSize: 30,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontWeight: "800",
+    color: "#1E293B",
     marginBottom: 6,
     letterSpacing: 0.3,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
-    color: '#64748B',
-    textAlign: 'center',
+    color: "#64748B",
+    textAlign: "center",
   },
   favoriteWrapper: {
     marginTop: 14,
     marginBottom: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   typesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   sectionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 28,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#DCE8DF',
-    shadowColor: '#000',
+    borderColor: "#DCE8DF",
+    shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -213,49 +307,100 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontWeight: "800",
+    color: "#1E293B",
     marginBottom: 14,
   },
   metricsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   metricBox: {
     flex: 1,
-    backgroundColor: '#F6FAF7',
+    backgroundColor: "#F6FAF7",
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#D7E6DA',
+    borderColor: "#D7E6DA",
     paddingVertical: 18,
     paddingHorizontal: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   metricLabel: {
     fontSize: 13,
-    color: '#64748B',
+    color: "#64748B",
     marginBottom: 8,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   metricValue: {
     fontSize: 18,
-    color: '#1E293B',
-    fontWeight: '800',
+    color: "#1E293B",
+    fontWeight: "800",
+  },
+  evolutionScrollContent: {
+    paddingRight: 12,
+  },
+  evolutionFlow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  evolutionCard: {
+    width: 140,
+    alignItems: "center",
+  },
+  evolutionImagePanel: {
+    width: 120,
+    height: 120,
+    backgroundColor: "#F6FAF7",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#D7E6DA",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  evolutionImage: {
+    width: 90,
+    height: 90,
+  },
+  evolutionName: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#1E293B",
+    textAlign: "center",
+  },
+  evolutionArrowBlock: {
+    width: 92,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  evolutionArrow: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#4CAF50",
+    marginBottom: 6,
+  },
+  evolutionCondition: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#64748B",
+    textAlign: "center",
+    fontWeight: "700",
   },
   centerState: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 24,
   },
   stateCard: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
+    width: "100%",
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 24,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
   },
   stateEmoji: {
     fontSize: 28,
@@ -263,20 +408,20 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#B91C1C',
-    textAlign: 'center',
+    color: "#B91C1C",
+    textAlign: "center",
     marginBottom: 16,
     lineHeight: 22,
   },
   retryButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 999,
   },
   retryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontWeight: "700",
     fontSize: 14,
   },
 });

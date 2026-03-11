@@ -18,6 +18,18 @@ export type PokemonStat = {
   value: number;
 };
 
+export type PokemonEvolution = {
+  name: string;
+  frenchName?: string;
+  image: string;
+  trigger?: string;
+  minLevel?: number | null;
+  item?: string | null;
+  heldItem?: string | null;
+  minHappiness?: number | null;
+  timeOfDay?: string | null;
+};
+
 export type PokemonDetail = {
   id: number;
   name: string;
@@ -37,4 +49,6 @@ export type PokemonDetail = {
     name: string;
     value: number;
   }[];
+
+  evolutions?: PokemonEvolution[];
 };

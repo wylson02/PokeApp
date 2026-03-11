@@ -1,5 +1,9 @@
 import { apiFetch } from './api';
-import { PokemonListItem, PokemonDetail } from '../types/pokemon';
+import {
+  PokemonListItem,
+  PokemonDetail,
+  PokemonEvolution,
+} from '../types/pokemon';
 
 type PokemonListResponse = {
   results: {
@@ -11,6 +15,9 @@ type PokemonListResponse = {
 type PokemonSpeciesResponse = {
   generation?: {
     name: string;
+    url: string;
+  };
+  evolution_chain?: {
     url: string;
   };
   names?: {
@@ -46,10 +53,39 @@ type PokemonResponse = {
   }[];
 };
 
+type EvolutionChainResponse = {
+  chain: EvolutionNode;
+};
+
+type EvolutionNode = {
+  species: {
+    name: string;
+    url: string;
+  };
+  evolves_to: EvolutionNode[];
+  evolution_details: EvolutionDetail[];
+};
+
+type EvolutionDetail = {
+  min_level?: number | null;
+  min_happiness?: number | null;
+  time_of_day?: string;
+  trigger?: {
+    name: string;
+  };
+  item?: {
+    name: string;
+  } | null;
+  held_item?: {
+    name: string;
+  } | null;
+};
+
 const pokemonListCache = new Map<string, PokemonListItem[]>();
 const pokemonSpeciesCache = new Map<number, PokemonSpeciesResponse>();
 const pokemonDataCache = new Map<number, PokemonResponse>();
 const pokemonDetailCache = new Map<string, PokemonDetail>();
+const evolutionChainCache = new Map<string, PokemonEvolution[]>();
 
 function extractIdFromUrl(url: string) {
   const parts = url.split('/').filter(Boolean);
@@ -61,6 +97,14 @@ function getOfficialArtwork(id: number, pokemonData?: PokemonResponse) {
     pokemonData?.sprites?.other?.['official-artwork']?.front_default ??
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
   );
+}
+
+function formatItemName(name?: string | null) {
+  if (!name) return null;
+  return name
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 async function getPokemonSpecies(id: number): Promise<PokemonSpeciesResponse> {
@@ -83,6 +127,68 @@ async function getPokemonData(id: number): Promise<PokemonResponse> {
   const data = await apiFetch<PokemonResponse>(`/pokemon/${id}`);
   pokemonDataCache.set(id, data);
   return data;
+}
+
+async function getFrenchNameFromSpeciesId(id: number, fallbackName: string) {
+  try {
+    const speciesData = await getPokemonSpecies(id);
+    const frenchEntry = speciesData.names?.find(
+      (entry) => entry.language.name === 'fr'
+    );
+    return frenchEntry?.name ?? fallbackName;
+  } catch {
+    return fallbackName;
+  }
+}
+
+async function buildEvolutionChain(
+  evolutionChainUrl: string
+): Promise<PokemonEvolution[]> {
+  const cached = evolutionChainCache.get(evolutionChainUrl);
+  if (cached) {
+    return cached;
+  }
+
+  const evolutionPath = evolutionChainUrl.replace(
+    'https://pokeapi.co/api/v2',
+    ''
+  );
+
+  const evolutionChainData =
+    await apiFetch<EvolutionChainResponse>(evolutionPath);
+
+  const evolutions: PokemonEvolution[] = [];
+
+  async function walkChain(
+    node: EvolutionNode,
+    inheritedDetail?: EvolutionDetail
+  ) {
+    const id = extractIdFromUrl(node.species.url);
+    const pokemonData = await getPokemonData(id);
+    const frenchName = await getFrenchNameFromSpeciesId(id, node.species.name);
+
+    evolutions.push({
+      name: node.species.name,
+      frenchName,
+      image: getOfficialArtwork(id, pokemonData),
+      trigger: inheritedDetail?.trigger?.name,
+      minLevel: inheritedDetail?.min_level ?? null,
+      item: formatItemName(inheritedDetail?.item?.name),
+      heldItem: formatItemName(inheritedDetail?.held_item?.name),
+      minHappiness: inheritedDetail?.min_happiness ?? null,
+      timeOfDay: inheritedDetail?.time_of_day || null,
+    });
+
+    for (const nextNode of node.evolves_to) {
+      const detail = nextNode.evolution_details?.[0];
+      await walkChain(nextNode, detail);
+    }
+  }
+
+  await walkChain(evolutionChainData.chain);
+  evolutionChainCache.set(evolutionChainUrl, evolutions);
+
+  return evolutions;
 }
 
 export async function fetchPokemonList(
@@ -169,6 +275,7 @@ export async function fetchPokemonDetail(
 
   let frenchName = data.name;
   let generationId: number | undefined = undefined;
+  let evolutions: PokemonEvolution[] = [];
 
   try {
     const speciesData = await getPokemonSpecies(data.id);
@@ -184,9 +291,14 @@ export async function fetchPokemonDetail(
     if (speciesData.generation?.url) {
       generationId = extractIdFromUrl(speciesData.generation.url);
     }
+
+    if (speciesData.evolution_chain?.url) {
+      evolutions = await buildEvolutionChain(speciesData.evolution_chain.url);
+    }
   } catch {
     frenchName = data.name;
     generationId = undefined;
+    evolutions = [];
   }
 
   const result: PokemonDetail = {
@@ -204,6 +316,7 @@ export async function fetchPokemonDetail(
       name: s.stat.name,
       value: s.base_stat,
     })),
+    evolutions,
   };
 
   pokemonDetailCache.set(normalizedName, result);
