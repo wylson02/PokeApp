@@ -1,6 +1,8 @@
 export type PokemonListItem = {
   id: number;
   name: string;
+  frenchName?: string;
+  displayName?: string;
   image: string;
 };
 
@@ -16,9 +18,15 @@ export type PokemonStat = {
 export type PokemonDetail = {
   id: number;
   name: string;
+  frenchName?: string;
   image: string;
-  types: PokemonType[];
-  stats: PokemonStat[];
   height: number;
   weight: number;
+  types: {
+    name: string;
+  }[];
+  stats: {
+    name: string;
+    value: number;
+  }[];
 };

@@ -11,10 +11,13 @@ function formatPokemonId(id: number) {
 }
 
 function formatPokemonName(name: string) {
+  if (!name) return '';
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 export default function PokemonCard({ pokemon, onPress }: PokemonCardProps) {
+  const displayName = pokemon.displayName ?? pokemon.frenchName ?? pokemon.name;
+
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.imageContainer}>
@@ -26,7 +29,7 @@ export default function PokemonCard({ pokemon, onPress }: PokemonCardProps) {
       </View>
 
       <Text style={styles.id}>{formatPokemonId(pokemon.id)}</Text>
-      <Text style={styles.name}>{formatPokemonName(pokemon.name)}</Text>
+      <Text style={styles.name}>{formatPokemonName(displayName)}</Text>
     </Pressable>
   );
 }
@@ -70,5 +73,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
+    textAlign: 'center',
   },
 });
